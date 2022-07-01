@@ -1,3 +1,7 @@
+from ast import literal_eval
+
+from tempest.lib.cli.output_parser import details as parse_details
+
 def kwargs_to_flags(valid_flags, arguments):
     """ Takes an iterable containing a list of valid flags and a flattened
             kwargs dict containing the flag values received by the function.
@@ -24,3 +28,16 @@ def kwargs_to_flags(valid_flags, arguments):
             else:
                 raise NameError('Invalid flag with name %s' % flag)
     return flag_string
+
+
+def parse_cli_output(output):
+    """Parses the raw output of an OpenStack CLI command as a Python dict."""
+    output_parsed = parse_details(output)
+    # All values are parsed as strings, this converts non-strings to their
+    # proper representation
+    for prop, value in output_parsed.items():
+        try:
+            output_parsed[prop] = literal_eval(value)
+        except (ValueError, SyntaxError):
+            pass
+    return output_parsed

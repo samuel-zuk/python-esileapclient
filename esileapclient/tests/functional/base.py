@@ -94,7 +94,6 @@ class ESIBaseTestClass(base.ClientTestBase):
                          user_domain_name=self.users[user]['domain'],
                          tenant_name=self.projects[project]['name'],
                          project_domain_name=self.projects[project]['domain'],
-                         identity_api_version='3',
                          uri=self.config['auth_url']))
 
     def _init_dummy_project(self, name, roles, parent=None):

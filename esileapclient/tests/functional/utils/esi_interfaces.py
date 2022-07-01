@@ -2,14 +2,23 @@ import json
 import esileapclient.tests.functional.utils.output_utils as utils
 
 
+def _execute(client, cmd, valid_flags, kwargs, args, parse, fail_ok):
+    flag_str = utils.kwargs_to_flags(valid_flags, kwargs) if kwargs else ''
+    arg_str = '' if not len(args) else ' '.join(args)
+    if parse:
+        flag_str = ' '.join((flag_str, '-f json'))
+        output = client.esi(cmd, flag_str, arg_str, fail_ok)
+        return json.loads(output)
+    else:
+        return client.esi(cmd, flag_str, arg_str, fail_ok)
+
+
 def offer_create(client, node_uuid, parse=True, fail_ok=False, **kwargs):
     valid_flags = ('resource_type', 'start_time', 'end_time',
                    'lessee', 'name', 'properties')
-    flags = utils.kwargs_to_flags(valid_flags, kwargs)
-    flags += ' -f json' if parse else ''
-
-    output = client.esi('offer create', flags, node_uuid, fail_ok)
-    return json.loads(output) if parse else output
+    return _execute(client, cmd='offer create', valid_flags=valid_flags,
+                    kwargs=kwargs, args=(node_uuid,), parse=parse,
+                    fail_ok=fail_ok)
 
 
 def offer_delete(client, offer_uuid, fail_ok=False):
@@ -19,48 +28,36 @@ def offer_delete(client, offer_uuid, fail_ok=False):
 def offer_list(client, parse=True, fail_ok=False, **kwargs):
     valid_flags = ('long', 'status', 'project', 'resource_uuid',
                    'resource_type', 'time_range', 'availability_range')
-    flags = utils.kwargs_to_flags(valid_flags, kwargs)
-    flags += ' -f json' if parse else ''
-
-    output = client.esi('offer list', flags, '', fail_ok)
-    return json.loads(output) if parse else output
+    return _execute(client, cmd='offer list', valid_flags=valid_flags,
+                    kwargs=kwargs, args=(), parse=parse, fail_ok=fail_ok)
 
 
-def offer_show(client, offer_uuid, parse=True, fail_ok=False, **kwargs):
-    flags = '-f json' if parse else ''
-    output = client.esi('offer show', flags, offer_uuid, fail_ok)
-    return json.loads(output) if parse else output
+def offer_show(client, offer_uuid, parse=True, fail_ok=False):
+    return _execute(client, cmd='offer show', valid_flags=None, kwargs=None,
+                    args=(offer_uuid,), parse=parse, fail_ok=fail_ok)
 
 
 def offer_claim(client, offer_uuid, parse=True, fail_ok=False, **kwargs):
     valid_flags = ('start_time', 'end_time', 'properties')
-    flags = utils.kwargs_to_flags(valid_flags, kwargs)
-    flags += ' -f json' if parse else ''
-
-    output = client.esi('offer claim', flags, offer_uuid, fail_ok)
-    return json.loads(output) if parse else output
+    return _execute(client, cmd='offer claim', valid_flags=valid_flags,
+                    kwargs=kwargs, args=(offer_uuid,), parse=parse,
+                    fail_ok=fail_ok)
 
 
-def lease_create(client, node_uuid, lessee, parse=True,
-                 fail_ok=False, **kwargs):
+def lease_create(client, node_uuid, lessee, parse=True, fail_ok=False,
+                 **kwargs):
     valid_flags = ('resource_type', 'start_time', 'end_time',
                    'name', 'properties')
-    flags = utils.kwargs_to_flags(valid_flags, kwargs)
-    flags += ' -f json' if parse else ''
-
-    output = client.esi('lease create', flags, '%s %s' %
-                        (node_uuid, lessee), fail_ok)
-    return json.loads(output) if parse else output
+    return _execute(client, cmd='lease create', valid_flags=valid_flags,
+                    kwargs=kwargs, args=(node_uuid, lessee), parse=parse,
+                    fail_ok=fail_ok)
 
 
 def lease_list(client, parse=True, fail_ok=False, **kwargs):
     valid_flags = ('long', 'all', 'status', 'offer_uuid', 'time_range',
                    'project', 'owner', 'resource_type', 'resource_uuid')
-    flags = utils.kwargs_to_flags(valid_flags, kwargs)
-    flags += ' -f json' if parse else ''
-
-    output = client.esi('lease list', flags, '', fail_ok)
-    return json.loads(output) if parse else output
+    return _execute(client, cmd='lease list', valid_flags=valid_flags,
+                    kwargs=kwargs, args=(), parse=parse, fail_ok=fail_ok)
 
 
 def lease_delete(client, lease_uuid, fail_ok=False):
@@ -68,6 +65,5 @@ def lease_delete(client, lease_uuid, fail_ok=False):
 
 
 def lease_show(client, lease_uuid, parse=True, fail_ok=False):
-    flags = '-f json' if parse else ''
-    output = client.esi('lease show', flags, lease_uuid, fail_ok)
-    return json.loads(output) if parse else output
+    return _execute(client, cmd='lease show', valid_flags=None, kwargs=None,
+                    args=(lease_uuid,), parse=parse, fail_ok=fail_ok)
